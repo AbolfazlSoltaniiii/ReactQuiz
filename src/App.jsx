@@ -1,142 +1,48 @@
-import Header from "./Components/Header.jsx";
-import Main from "./Components/Main.jsx";
-import {useEffect, useReducer} from "react";
-import Loader from "./Components/Loader.jsx";
-import Error from "./Components/Error.jsx";
-import StartScreen from "./Components/StartScreen.jsx";
-import Questions from "./Components/Questions.jsx";
-import ProgressBar from "./Components/ProgressBar.jsx";
-import FinishScreen from "./Components/FinishScreen.jsx";
-
-const initialState = {
-    status: 'loading',
-    data: [],
-    currIndex: 0,
-    answer: null,
-    points: 0,
-    secondsRemaining: 0
-}
-
-const reducer = (state, action) => {
-    switch (action.type) {
-        case "receivedData":
-            return {
-                ...state,
-                status: 'ready',
-                data: action.payload,
-            };
-
-        case "failedData":
-            return {
-                ...state,
-                status: 'failed',
-            };
-
-        case "activeQuiz":
-            return {
-                ...state,
-                status: 'active',
-                secondsRemaining: state.data.length * 5
-            };
-
-        case "updatedAnswer": {
-            const currQuestion = state.data[state.currIndex];
-
-            return {
-                ...state,
-                answer: action.payload,
-                points: currQuestion.correctOption === action.payload ? state.points + currQuestion.points : state.points
-            }
-        }
-
-        case "nextQuestion":
-            return {
-                ...state,
-                answer: null,
-                currIndex: state.currIndex + 1
-            }
-
-        case "finish":
-            return {
-                ...state,
-                status: 'finished'
-            }
-
-        case "restart":
-            return {
-                ...state,
-                status: 'ready',
-                currIndex: 0,
-                answer: null,
-                points: 0
-            }
-
-        case 'tick': {
-            const updatedSecondRemaining = state.secondsRemaining - 1;
-
-            return {
-                ...state,
-                secondsRemaining: updatedSecondRemaining,
-                status: updatedSecondRemaining === 0 ? 'finished' : state.status
-            }
-        }
-
-        default:
-            console.warn("unknown type")
-    }
-}
+import Header from "./components/Header.jsx";
+import Main from "./components/Main.jsx";
+import { useEffect } from "react";
+import Loader from "./components/Loader.jsx";
+import Error from "./components/Error.jsx";
+import StartScreen from "./components/StartScreen.jsx";
+import Questions from "./components/Questions.jsx";
+import ProgressBar from "./components/ProgressBar.jsx";
+import FinishScreen from "./components/FinishScreen.jsx";
+import { useQuiz } from "./hooks/useQuiz.js";
 
 const App = () => {
-    const [{status, data, currIndex, answer, points, secondsRemaining}, dispatch] = useReducer(reducer, initialState);
+  const {dispatch, status} = useQuiz();
 
-    const numQuestions = data.length;
+  useEffect(() => {
+    fetch("http://localhost:8000/questions")
+      .then(res => res.json())
+      .then(data => dispatch({
+        type: "receivedData",
+        payload: data
+      }))
+      .catch(() => dispatch({
+        type: "failedData",
+        payload: []
+      }));
+  }, [dispatch]);
 
-    const maxPossiblePoints = data.reduce((prev, curr) => prev + curr.points, 0)
-
-    useEffect(() => {
-        fetch("http://localhost:8000/questions")
-            .then(res => res.json())
-            .then(data => dispatch({
-                type: 'receivedData',
-                payload: data
-            }))
-            .catch(() => dispatch({
-                type: 'failedData',
-                payload: []
-            }))
-    }, []);
-
-    return (
-        <div className='app'>
-            <Header/>
-            <Main>
-                {status === 'loading' && <Loader/>}
-                {status === 'failed' && <Error/>}
-                {status === 'ready' && <StartScreen numQuestions={numQuestions} dispatch={dispatch}/>}
-                {status === 'active' &&
-                    <>
-                        <ProgressBar
-                            currIndex={currIndex}
-                            numQuestions={numQuestions}
-                            points={points}
-                            maxPossiblePoints={maxPossiblePoints}
-                            answer={answer}
-                        />
-                        <Questions
-                            currQuestion={data[currIndex]}
-                            answer={answer}
-                            dispatch={dispatch}
-                            currIndex={currIndex}
-                            numQuestions={numQuestions}
-                            secondsRemaining={secondsRemaining}
-                        />
-                    </>
-                }
-                {status === 'finished' &&
-                    <FinishScreen points={points} maxPossiblePoints={maxPossiblePoints} dispatch={dispatch}/>}
-            </Main>
-        </div>
-    );
-}
+  return (
+    <div className="app">
+      <Header />
+      <Main>
+        {status === "loading" && <Loader />}
+        {status === "failed" && <Error />}
+        {status === "ready" && <StartScreen />}
+        {status === "active" &&
+          <>
+            <ProgressBar />
+            <Questions />
+          </>
+        }
+        {status === "finished" &&
+          <FinishScreen />}
+      </Main>
+    </div>
+  );
+};
 
 export default App;

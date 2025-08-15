@@ -1,17 +1,20 @@
-import React from 'react';
+import React from "react";
+import { useQuiz } from "../hooks/useQuiz.js";
 
-const FinishScreen = ({points, maxPossiblePoints, dispatch}) => {
-    const percentage = (points / maxPossiblePoints) * 100;
+const FinishScreen = () => {
+  const {points, maxPossiblePoints, dispatch} = useQuiz();
 
-    return (
-        <>
-            <p className="result">
-                😊You scored {points} out of {maxPossiblePoints} ({Math.ceil(percentage)}%)😊
-            </p>
+  const percentage = (points / maxPossiblePoints) * 100;
 
-            <button className="btn btn-ui" onClick={() => dispatch({type: 'restart'})}>Restart quiz</button>
-        </>
-    );
+  return (
+    <>
+      <p className="result">
+        😊You scored {points} out of {maxPossiblePoints} ({Math.ceil(percentage)}%)😊
+      </p>
+
+      <button className="btn btn-ui" onClick={() => dispatch({type: "restart"})}>Restart quiz</button>
+    </>
+  );
 };
 
 export default FinishScreen;
