@@ -1,22 +1,25 @@
-import React from 'react';
+import React from "react";
 import Option from "./Option.jsx";
 import Timer from "./Timer.jsx";
+import { useQuiz } from "../hooks/useQuiz.js";
 
-const Questions = ({currQuestion, answer, dispatch, currIndex, numQuestions, secondsRemaining}) => {
-    const isLastQuestions = currIndex === numQuestions - 1;
+const Questions = () => {
+  const {currQuestion, answer, dispatch, currIndex, numQuestions, secondsRemaining} = useQuiz();
 
-    return (
-        <div>
-            <h4>{currQuestion.question}</h4>
-            <Option currQuestion={currQuestion} answer={answer} dispatch={dispatch}/>
+  const isLastQuestions = currIndex === numQuestions - 1;
 
-            {answer !== null &&
-                <button className="btn btn-ui"
-                        onClick={() => dispatch({type: isLastQuestions ? 'finish' : 'nextQuestion'})}>{isLastQuestions ? "Finish" : "Next"}</button>}
+  return (
+    <div>
+      <h4>{currQuestion.question}</h4>
+      <Option currQuestion={currQuestion} answer={answer} dispatch={dispatch} />
 
-            <Timer dispatch={dispatch} secondsRemaining={secondsRemaining}/>
-        </div>
-    );
+      {answer !== null &&
+        <button className="btn btn-ui"
+                onClick={() => dispatch({type: isLastQuestions ? "finish" : "nextQuestion"})}>{isLastQuestions ? "Finish" : "Next"}</button>}
+
+      <Timer dispatch={dispatch} secondsRemaining={secondsRemaining} />
+    </div>
+  );
 };
 
 export default Questions;
